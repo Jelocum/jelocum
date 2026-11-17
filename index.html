@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NoSeOlvida - Recordatorios Compartidos</title>
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --success: #10b981;
+            --bg: #f3f4f6;
+            --card: #ffffff;
+            --text: #1f2937;
+        }
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 0;
+            padding-bottom: 80px;
+        }
+        header {
+            background: var(--primary);
+            color: white;
+            padding: 1rem;
+            text-align: center;
+            font-size: 1.25rem;
+            font-weight: bold;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .container {
+            max-width: 600px;
+            margin: 1rem auto;
+            padding: 0 1rem;
+        }
+        .card {
+            background: var(--card);
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            border-left: 6px solid var(--primary);
+        }
+        .card.red { border-left-color: var(--danger); }
+        .card.yellow { border-left-color: var(--warning); }
+        .card.green { border-left-color: var(--success); }
+        
+        .piktogram {
+            font-size: 2.2rem;
+            background: #eef2ff;
+            padding: 0.5rem;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 50px;
+        }
+        .content {
+            flex-grow: 1;
+        }
+        .title {
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-bottom: 0.25rem;
+        }
+        .details {
+            font-size: 0.85rem;
+            color: #6b7280;
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+        .badge {
+            background: #e5e7eb;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+        }
+        .fab {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--primary);
+            color: white;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+            cursor: pointer;
+            border: none;
+        }
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+            padding: 1rem;
+            z-index: 1000;
+        }
+        .modal-content {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 400px;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 0.75rem;
+            margin: 0.5rem 0 1rem 0;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            box-sizing: border-box;
+        }
+        button.btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.75rem;
+            border-radius: 8px;
+            width: 100%;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        button.btn-danger { background: var(--danger); }
+    </style>
+</head>
+<body>
+
+    <header>🚨 NoSeOlvida (Sincronizado)</header>
+
+    <div class="container" id="remindersList">
+        <!-- Los recordatorios se cargarán aquí en tiempo real -->
+    </div>
+
+    <button class="fab" onclick="openModal()">+</button>
+
+    <!-- MODAL NUEVO RECORDATORIO -->
+    <div id="reminderModal" class="modal">
+        <div class="modal-content">
+            <h3>Nuevo Recordatorio</h3>
+            <label>Título:</label>
+            <input type="text" id="remTitle" placeholder="Ej: Comprar pan, Médico niños...">
+            
+            <label>Pictograma (Emoji):</label>
+            <input type="text" id="remIcon" value="📌" style="font-size: 1.5rem; text-align: center;">
+
+            <label>Ubicación (Opcional):</label>
+            <input type="text" id="remLocation" placeholder="Ej: Supermercado, Colegio...">
+
+            <label>Prioridad (Semáforo):</label>
+            <select id="remPriority">
+                <option value="red">🔴 Alta (Rojo)</option>
+                <option value="yellow">🟡 Media (Amarillo)</option>
+                <option value="green">🟢 Baja (Verde)</option>
+            </select>
+
+            <label>Responsable:</label>
+            <select id="remOwner">
+                <option value="Yo">Yo</option>
+                <option value="Mi mujer">Mi mujer</option>
+                <option value="Ambos">Ambos</option>
+            </select>
+
+            <button class="btn" onclick="saveReminder()">Guardar en la Nube</button>
+            <button class="btn" style="background:#9ca3af; margin-top:0.5rem;" onclick="closeModal()">Cancelar</button>
+        </div>
+    </div>
+
+    <!-- MODAL PIN DE SEGURIDAD -->
+    <div id="pinModal" class="modal">
+        <div class="modal-content" style="text-align: center;">
+            <h3>🔐 Introduce PIN para Cerrar</h3>
+            <p style="font-size: 0.9rem; color: #6b7280;">PIN por defecto: <b>1234</b></p>
+            <input type="password" id="pinInput" maxlength="4" style="text-align: center; font-size: 2rem; letter-spacing: 10px;" placeholder="****">
+            <button class="btn btn-danger" onclick="verifyPin()">Confirmar Cierre</button>
+            <button class="btn" style="background:#9ca3af; margin-top:0.5rem;" onclick="closePinModal()">Cancelar</button>
+        </div>
+    </div>
+
+    <!-- SCRIPTS DE FIREBASE (COMPAT) -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+    <script>
+        // Configuración de tu Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyCrt1qcrvw3IYjW3x062X-1jQqJZdUX3L8",
+            authDomain: "noseolvida.firebaseapp.com",
+            projectId: "noseolvida",
+            storageBucket: "noseolvida.firebasestorage.app",
+            messagingSenderId: "883134287058",
+            appId: "1:883134287058:web:bc230bf114dec9f1aaf10b",
+            measurementId: "G-QN8ZT9TFK0"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        let currentDeleteId = null;
+
+        // Detección automática de pictogramas según texto
+        document.getElementById('remTitle').addEventListener('input', (e) => {
+            const val = e.target.value.toLowerCase();
+            let icon = '📌';
+            if(val.includes('pan') || val.includes('comprar') || val.includes('super')) icon = '🛒';
+            else if(val.includes('medico') || val.includes('hospital') || val.includes('salud')) icon = '🩺';
+            else if(val.includes('coche') || val.includes('gasolina') || val.includes('carro')) icon = '🚗';
+            else if(val.includes('casa') || val.includes('limpiar') || val.includes('luz')) icon = '🏠';
+            else if(val.includes('niño') || val.includes('colegio') || val.includes('escuela')) icon = '🎒';
+            else if(val.includes('perro') || val.includes('gato') || val.includes('mascota')) icon = '🐶';
+            document.getElementById('remIcon').value = icon;
+        });
+
+        function openModal() { document.getElementById('reminderModal').style.display = 'flex'; }
+        function closeModal() { document.getElementById('reminderModal').style.display = 'none'; }
+
+        // Guardar en Firestore (Sincronización en la nube)
+        function saveReminder() {
+            const title = document.getElementById('remTitle').value;
+            if(!title) return alert('Escribe un título');
+
+            const newRem = {
+                title: title,
+                icon: document.getElementById('remIcon').value || '📌',
+                location: document.getElementById('remLocation').value || 'Sin ubicación',
+                priority: document.getElementById('remPriority').value,
+                owner: document.getElementById('remOwner').value,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            };
+
+            db.collection("recordatorios").add(newRem).then(() => {
+                closeModal();
+                document.getElementById('remTitle').value = '';
+                document.getElementById('remLocation').value = '';
+            }).catch(err => alert('Error al guardar: ' + err));
+        }
+
+        // Escuchar cambios en tiempo real desde Firebase
+        db.collection("recordatorios").orderBy("createdAt", "desc").onSnapshot((snapshot) => {
+            const list = document.getElementById('remindersList');
+            list.innerHTML = '';
+            
+            if(snapshot.empty) {
+                list.innerHTML = '<p style="text-align:center; color:#9ca3af; margin-top:2rem;">No hay recordatorios pendientes. ¡Todo al día!</p>';
+                return;
+            }
+
+            snapshot.forEach((doc) => {
+                const data = doc.data();
+                const card = document.createElement('div');
+                card.className = `card ${data.priority}`;
+                card.innerHTML = `
+                    <div class="piktogram">${data.icon}</div>
+                    <div class="content">
+                        <div class="title">${data.title}</div>
+                        <div class="details">
+                            <span class="badge">👤 ${data.owner}</span>
+                            <span class="badge">📍 ${data.location}</span>
+                        </div>
+                    </div>
+                    <button onclick="requestDelete('${doc.id}')" style="background:none; border:none; font-size:1.5rem; cursor:pointer;" title="Cerrar recordatorio">🗑️</button>
+                `;
+                list.appendChild(card);
+            });
+        });
+
+        function requestDelete(id) {
+            currentDeleteId = id;
+            document.getElementById('pinInput').value = '';
+            document.getElementById('pinModal').style.display = 'flex';
+        }
+
+        function closePinModal() {
+            document.getElementById('pinModal').style.display = 'none';
+            currentDeleteId = null;
+        }
+
+        function verifyPin() {
+            const pin = document.getElementById('pinInput').value;
+            if(pin === '1234') {
+                db.collection("recordatorios").doc(currentDeleteId).delete().then(() => {
+                    closePinModal();
+                });
+            } else {
+                alert('PIN incorrecto (Prueba con 1234)');
+            }
+        }
+    </script>
+</body>
+</html>
