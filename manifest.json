@@ -1,9 +1,12 @@
 {
-  "name": "NoSeOlvida",
-  "short_name": "NoSeOlvida",
-  "start_url": "/",
+ 
+  "background_color": "#ffffff",
+  "dir": "ltr",
   "display": "standalone",
-  "background_color": "#f3f4f6",
-  "theme_color": "#4f46e5",
-  "description": "App de recordatorios persistentes compartidos"
+  "name": "jelocum.github",
+  "orientation": "any",
+  "scope": "/",
+  "short_name": "jelocum.github",
+  "start_url": "/",
+  "theme_color": "#ffffff"
 }
